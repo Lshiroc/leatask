@@ -1,10 +1,12 @@
 "use client";
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ReactFlow,
   addEdge,
   applyNodeChanges,
   applyEdgeChanges,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
   type FitViewOptions,
@@ -14,6 +16,7 @@ import {
   type OnNodeDrag,
   type NodeTypes,
   type DefaultEdgeOptions,
+  Position,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -55,24 +58,77 @@ const onNodeDrag: OnNodeDrag = (_, node) => {
 };
 
 function Flow() {
-  const [nodes, setNodes] = useState<Node[]>(initialNodes);
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  // const [nodes, setNodes] = useState<Node[]>(initialNodes);
+  // const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
 
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [setNodes]
-  );
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges]
-  );
   const onConnect: OnConnect = useCallback(
     (connection) => setEdges((eds) => addEdge(connection, eds)),
     [setEdges]
   );
 
+  useEffect(() => {
+    setNodes([
+      {
+        id: '1',
+        type: 'input',
+        data: { label: 'An input node' },
+        position: { x: 0, y: 50 },
+        sourcePosition: Position.Right,
+      },
+      {
+        id: '2',
+        type: 'selectorNode',
+        data: { onChange: () => {}, color: "#555" },
+        style: { border: '1px solid #777', padding: 10 },
+        position: { x: 300, y: 50 },
+      },
+      {
+        id: '3',
+        type: 'output',
+        data: { label: 'Output A' },
+        position: { x: 650, y: 25 },
+        targetPosition: Position.Left,
+      },
+      {
+        id: '4',
+        type: 'output',
+        data: { label: 'Output B' },
+        position: { x: 650, y: 100 },
+        targetPosition: Position.Left,
+      },
+    ]);
+
+    setEdges([
+      {
+        id: 'e1-2',
+        source: '1',
+        target: '2',
+        animated: true,
+        style: { stroke: '#fff' },
+      },
+      {
+        id: 'e2a-3',
+        source: '2',
+        target: '3',
+        sourceHandle: 'a',
+        animated: true,
+        style: { stroke: '#fff' },
+      },
+      {
+        id: 'e2b-4',
+        source: '2',
+        target: '4',
+        sourceHandle: 'b',
+        animated: true,
+        style: { stroke: '#fff' },
+      },
+    ]);
+  }, [])
+
   return (
-    <div style={{ width:"600px", height: "600px"}}>
+    <div style={{ width:"100%", height: "95dvh"}}>
       <ReactFlow
         nodes={nodes}
         nodeTypes={nodeTypes}
